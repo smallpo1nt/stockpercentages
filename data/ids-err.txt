@@ -1,0 +1,11 @@
+002349	ERROR: No Google result for '002349'.
+002474	ERROR: No Google result for '002474'.
+002503	ERROR: No Google result for '002503'.
+002543	ERROR: No Google result for '002543'.
+300200	ERROR: Wrong Google result for '300200', got '002121'.
+300300	ERROR: Wrong Google result for '300300', got '002121'.
+300303	ERROR: Wrong Google result for '300303', got '002121'.
+300317	ERROR: Wrong Google result for '300317', got '603002'.
+300318	ERROR: No Google result for '300318'.
+300334	ERROR: Wrong Google result for '300334', got '601608'.
+00270	ERROR: No Google result for '00270'.

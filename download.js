@@ -2,11 +2,13 @@
 
 var request = require('request'),
     iconv = require('iconv-lite'),
+    delay = require('./lib/delay'),
     BufferHelper = require('bufferhelper'),
     deferred = require('deferred'),
     promisify = deferred.promisify,
     fetchEncodedContent = require('./lib/fetchEncodedContent'),
-    stocks = require('./data/stocks.json');
+    stocks = require('./data/stocks.json'),
+    stocksWithId = require('./data/stocks-with-ids.json');
 
 /**
  * This constructs the URL by a stock id and id.
@@ -93,25 +95,39 @@ function getPercentages(stock) {
 
 /**
  * Print the line and handle errors
- * @param stockid: integer
+ * @param stock: {stockid: string, id: string}
  * @return Promise(void)
  */
-function printLine(stockid) {
-  return findStockInGoogle(stockid)
-    .then(getPercentages)
+function printLine(stock) {
+  return getPercentages(stock)
     .then(function (nums) {
-      console.log(stockid + "\t" + nums.join("\t"))
+      console.log(stock.stockid + "\t" + nums.join("\t"))
+    }, function (err) {
+      console.error(stock.stockid + "\tERROR: " + err);
+    });
+}
+
+/**
+ * Read all IDs from Google and save them without processing
+ * Needs stronger delay policy, since google servers are fast
+ * and well protected against over-use, so I add a 500ms delay
+ * to every request.
+ */
+function printIds(stockid) {
+  var find = delay(findStockInGoogle, 500);
+  return find(stockid)
+    .then(function (a) {
+      console.log(a)
     }, function (err) {
       console.error(stockid + "\tERROR: " + err);
     });
 }
 
-/**
- * Limit the number of concurrent queries to 3
- */
-var printLineGate = deferred.gate(printLine,3);
+
 
 /**
- * Run the code
+ * Run the code fr each stock
  */
-deferred.map(stocks, printLineGate).done();
+// deferred.map(stocks, deferred.gate(printIds,1)).done();
+deferred.map(stocksWithId, deferred.gate(printLine,2)).done();
+
