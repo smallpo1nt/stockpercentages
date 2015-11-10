@@ -8,7 +8,22 @@ var request = require('request'),
     promisify = deferred.promisify,
     fetchEncodedContent = require('./lib/fetchEncodedContent'),
     stocks = require('./data/stocks.json'),
-    stocksWithId = require('./data/stocks-with-ids.json');
+    stocksWithId = require('./data/stocks-with-ids.json'),
+    fs = require('fs'),
+    writeFile = promisify(fs.writeFile),
+    readDir = promisify(fs.readdir);
+
+var readFile = function (url, encoding) {
+  var def = deferred();
+  fs.readFile(url, encoding, function (err, data) {
+    if (err) {
+      def.reject(err);
+    } else {
+      def.resolve(data);
+    }
+  });
+  return def.promise
+}
 
 /**
  * This constructs the URL by a stock id and id.
@@ -78,8 +93,9 @@ function extractNumbersAfter(pos, body) {
  * Return Promise(array(float))
  */
 function getPercentages(stock) {
-  var url = makeurl(stock.stockid, stock.id);
-  return fetchEncodedContent(url, 'GBK').then(function (body) {
+  var url = makeurl(stock.stockid, stock.id),
+      fname = "files/"+stock.stockid+".html";
+  return readFile(fname,"utf-8").then(function (body) {
     // Find top 10 position
     var top10pos = body.indexOf('前十名股东');
     if (top10pos < 0) throw "No occurence of '前十名股东'.";
@@ -123,11 +139,30 @@ function printIds(stockid) {
     });
 }
 
+/**
+ * Download a stocks page
+ * @param stock: {stockid: string, id: string}
+ * @return Promise(void)
+ */
+function downloadPage(stock) {
+
+  var url = makeurl(stock.stockid, stock.id),
+      fname = "files/"+stock.stockid+".html";
+
+  return writeFile(fname,fetchEncodedContent(url, 'GBK')).done();
+}
+
 
 
 /**
  * Run the code fr each stock
  */
 // deferred.map(stocks, deferred.gate(printIds,1)).done();
-deferred.map(stocksWithId, deferred.gate(printLine,2)).done();
+deferred.map(stocksWithId, deferred.gate(printLine,10)).done();
+
+
+
+// deferred.map(stocksWithId, deferred.gate(downloadPage,2)).done();
+
+
 
