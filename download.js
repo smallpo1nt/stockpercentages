@@ -68,7 +68,7 @@ function findStockInGoogle(stockid) {
  * @return array(float)
  */
 function extractNumbersAfter(pos, body) {
-  var re = / ([0-9]{1,2}\.[0-9]{1,5})/g;
+  var re = /\s([0-9]{1,2}(?:\.[0-9]{1,5}|%))/g;
   re.lastIndex = pos;
   // Construct a list of at most 20 numbers starting from 前十名股东
   // Quit if the gap is bigger than 500 characters.
@@ -98,7 +98,8 @@ function getPercentages(stock) {
   return readFile(fname,"utf-8").then(function (body) {
     // Find top 10 position
     var top10pos = body.indexOf('前十名股东');
-    if (top10pos < 0) throw "No occurence of '前十名股东'.";
+    if (top10pos < 0) top10pos = body.indexOf('前10');
+    if (top10pos < 0) throw "No occurence of '前十名股东' or '前10'.";
 
     var nums = extractNumbersAfter(top10pos, body);
     // Evaluate the resulting list of nums
